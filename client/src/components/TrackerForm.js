@@ -55,15 +55,23 @@ const TrackerForm = ({ onProfileAdded }) => {
     }
 
     setLoading(true);
+    setError('');
+    setSuccess('');
+    
     try {
-      await addProfile(formData.username, formData.email);
-      setSuccess('Profile added successfully!');
-      setFormData({ username: '', email: '' }); // Clear form
-      if (onProfileAdded) {
-        onProfileAdded(); // Notify parent component
+      const response = await addProfile(formData.username, formData.email);
+      if (response.success) {
+        setSuccess('Profile added successfully! We will notify you of any changes in their following list.');
+        setFormData({ username: '', email: '' }); // Clear form
+        if (onProfileAdded) {
+          onProfileAdded(); // Notify parent component
+        }
+      } else {
+        setError(response.message || 'Failed to add profile');
       }
     } catch (err) {
-      setError(err.message || 'Failed to add profile');
+      console.error('Error adding profile:', err);
+      setError(err.message || 'Failed to add profile. Please try again.');
     } finally {
       setLoading(false);
     }
