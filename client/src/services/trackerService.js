@@ -1,54 +1,22 @@
-import axios from 'axios';
+import api from './api';
 
-const API_URL = 'http://localhost:5001/api/tracker';
-
-// Create axios instance with auth header
-const axiosInstance = axios.create({
-    baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    }
-});
-
-// Add auth token to requests
-axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
-export const addProfile = async (username, email) => {
-    try {
-        const response = await axiosInstance.post('/profiles', { username, email });
-        console.log(response.data);
-        return response.data;
-    } catch (error) {
-        console.log(error);
-        throw error.response?.data || { message: 'An error occurred' };
-    }
+const addProfile = async (username, email) => {
+    const response = await api.post('/api/tracker/profiles', { username, email });
+    return response.data;
 };
 
-export const getProfiles = async () => {
-    try {
-        const response = await axiosInstance.get('/profiles');
-        return response.data;
-    } catch (error) {
-        throw error.response?.data || { message: 'An error occurred' };
-    }
+const getProfiles = async () => {
+    const response = await api.get('/api/tracker/profiles');
+    return response.data;
 };
 
-export const removeProfile = async (id) => {
-    try {
-        const response = await axiosInstance.delete(`/profiles/${id}`);
-        return response.data;
-    } catch (error) {
-        throw error.response?.data || { message: 'An error occurred' };
-    }
+const removeProfile = async (id) => {
+    const response = await api.delete(`/api/tracker/profiles/${id}`);
+    return response.data;
+};
+
+export {
+    addProfile,
+    getProfiles,
+    removeProfile
 }; 
