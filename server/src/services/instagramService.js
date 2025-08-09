@@ -51,7 +51,6 @@ const fetchInstagramProfile = async (username) => {
             await new Promise(resolve => setTimeout(resolve, 10000));
         }
        
-
         const combinedData = {
             ...profileResponse.data,
             following_list: followingList || []
@@ -82,32 +81,6 @@ const fetchInstagramProfile = async (username) => {
     }
 };
 
-const validateProfile = (profileData) => {
-    console.log('Validating profile data:', {
-        isPrivate: profileData.is_private,
-        followingCount: profileData.following_count,
-        hasFollowingList: Boolean(profileData.following_list)
-    });
-
-    // Check if profile is private
-    if (profileData.is_private) {
-        throw new Error('Cannot track private profiles');
-    }
-
-    // Check following count
-    if (profileData.following_count > 100) {
-        throw new Error('Cannot track profiles following more than 100 accounts');
-    }
-
-    // Validate that we have the following list
-    if (!profileData.following_list || !Array.isArray(profileData.following_list)) {
-        throw new Error('Failed to fetch following list');
-    }
-
-    return true;
-};
-
 module.exports = {
-    fetchInstagramProfile,
-    validateProfile
+    fetchInstagramProfile
 }; 

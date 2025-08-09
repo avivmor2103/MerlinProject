@@ -27,8 +27,29 @@ exports.addProfile = async (req, res) => {
         // Fetch profile data from Instagram
         const profileData = await fetchInstagramProfile(username);
         
-        // Validate profile
-        validateProfile(profileData);
+        // Check if profile is private
+        if (profileData.is_private) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot track private profiles'
+            });
+        }
+
+        // Check following count
+        if (profileData.following_count > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cannot track profiles following more than 100 accounts'
+            });
+        }
+
+        // Validate that we have the following list
+        if (!profileData.following_list || !Array.isArray(profileData.following_list)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Failed to fetch following list'
+            });
+        }
 
         // Create new tracked profile
         const trackedProfile = await TrackedProfile.create({
