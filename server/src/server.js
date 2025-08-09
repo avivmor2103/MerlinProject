@@ -13,22 +13,14 @@ app.use(express.json());
 
 // CORS configuration
 const allowedOrigins = [
-    'http://localhost:5002', // Local development
-    process.env.CLIENT_URL, // Production frontend URL
-    'https://merlin-frontend.onrender.com' // Render.com frontend URL
-].filter(Boolean); // Remove any undefined values
+    'http://localhost:5002',
+    'https://merlin-front.onrender.com'  // Your frontend URL
+];
 
 app.use(cors({
-    origin: function(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        if (allowedOrigins.indexOf(origin) === -1) {
-            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-            return callback(new Error(msg), false);
-        }
-        return callback(null, true);
-    },
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 
@@ -44,10 +36,11 @@ const mongooseOptions = {
 mongoose.connect(config.MONGODB_URI, mongooseOptions)
     .then(() => {
         console.log('Connected to MongoDB Atlas');
+        console.log('CORS configured for origins:', allowedOrigins);
+        
         // Start server only after successful database connection
         const server = app.listen(config.PORT, () => {
             console.log(`Server is running on port ${config.PORT}`);
-            console.log('Allowed CORS origins:', allowedOrigins);
         });
 
         // Graceful shutdown
@@ -78,6 +71,6 @@ app.get('/', (req, res) => {
     res.json({ 
         message: 'API is running',
         mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
-        allowedOrigins: allowedOrigins
+        corsOrigins: allowedOrigins
     });
 }); 
