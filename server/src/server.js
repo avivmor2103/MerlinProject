@@ -10,8 +10,25 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+
+// CORS configuration
+const allowedOrigins = [
+    'http://localhost:5002', // Local development
+    process.env.CLIENT_URL, // Production frontend URL
+    'https://merlin-frontend.onrender.com' // Render.com frontend URL
+].filter(Boolean); // Remove any undefined values
+
 app.use(cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5002',
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
     credentials: true
 }));
 
@@ -19,8 +36,8 @@ app.use(cors({
 const mongooseOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-    socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
 };
 
 // Connect to MongoDB
@@ -30,6 +47,7 @@ mongoose.connect(config.MONGODB_URI, mongooseOptions)
         // Start server only after successful database connection
         const server = app.listen(config.PORT, () => {
             console.log(`Server is running on port ${config.PORT}`);
+            console.log('Allowed CORS origins:', allowedOrigins);
         });
 
         // Graceful shutdown
@@ -47,8 +65,8 @@ mongoose.connect(config.MONGODB_URI, mongooseOptions)
     })
     .catch((err) => {
         console.error('MongoDB connection error:', err);
-        console.error('MongoDB URI:', config.MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//<credentials>@')); // Log URI without credentials
-        process.exit(1); // Exit if we can't connect to database
+        console.error('MongoDB URI:', config.MONGODB_URI.replace(/\/\/[^:]+:[^@]+@/, '//<credentials>@'));
+        process.exit(1);
     });
 
 // Routes
@@ -59,6 +77,7 @@ app.use('/api/tracker', trackerRoutes);
 app.get('/', (req, res) => {
     res.json({ 
         message: 'API is running',
-        mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+        mongoStatus: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+        allowedOrigins: allowedOrigins
     });
 }); 
